@@ -38,11 +38,21 @@ module "admin_groups" {
   parameter_read = "${formatlist("/${var.namespace}/%s/admin_group", local.accounts_enabled)}"
 }
 
+module "kubernetes_admin_groups" {
+  source         = "git::https://github.com/cloudposse/terraform-aws-ssm-parameter-store?ref=tags/0.1.5"
+  parameter_read = "${formatlist("/${var.namespace}/%s/kubernetes_admin_group", local.accounts_enabled)}"
+}
+
+module "kubernetes_readonly_groups" {
+  source         = "git::https://github.com/cloudposse/terraform-aws-ssm-parameter-store?ref=tags/0.1.5"
+  parameter_read = "${formatlist("/${var.namespace}/%s/kubernetes_readonly_group", local.accounts_enabled)}"
+}
+
 locals {
   account_alias   = "${data.terraform_remote_state.account_settings.account_alias}"
   signin_url      = "${data.terraform_remote_state.account_settings.signin_url}"
-  admin_groups    = ["${module.admin_groups.values}"]
-  readonly_groups = ["${data.terraform_remote_state.root_iam.readonly_group}"]
+  admin_groups    = ["${concat(module.admin_groups.values, module.kubernetes_admin_groups.values)}"]
+  readonly_groups = ["${concat(data.terraform_remote_state.root_iam.readonly_group, module.kubernetes_readonly_groups.values)}"]
 }
 
 output "account_alias" {

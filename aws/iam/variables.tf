@@ -17,3 +17,15 @@ variable "stage" {
   type        = "string"
   description = "Stage, e.g. 'prod', 'staging', 'dev', or 'test'"
 }
+
+variable "kubernetes_readonly_role_name" {
+  type        = "string"
+  default     = "KubernetesReadOnly"
+  description = "IAM role name for the Kubernetes readonly user, used by aws-iam-authenticator"
+}
+
+variable "kubernetes_admin_role_name" {
+  type        = "string"
+  default     = "KubernetesAdmin"
+  description = "IAM role name for the Kubernetes admin user, used by aws-iam-authenticator"
+}
