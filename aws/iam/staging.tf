@@ -4,6 +4,32 @@ variable "staging_account_user_names" {
   default     = []
 }
 
+module "kops_admin_access_group_staging" {
+  source            = "git::https://github.com/cloudposse/terraform-aws-organization-access-group.git?ref=tags/0.3.0"
+  enabled           = "${contains(var.accounts_enabled, "staging") == true ? "true" : "false"}"
+  namespace         = "${var.namespace}"
+  stage             = "staging"
+  name              = "admin"
+  attributes        = "kubernetes"
+  role_name         = "${var.kubernetes_admin_role_name}"
+  user_names        = "${var.staging_account_user_names}"
+  member_account_id = "${data.terraform_remote_state.accounts.staging_account_id}"
+  require_mfa       = "true"
+}
+
+module "kops_readonly_access_group_staging" {
+  source            = "git::https://github.com/cloudposse/terraform-aws-organization-access-group.git?ref=tags/0.3.0"
+  enabled           = "${contains(var.accounts_enabled, "staging") == true ? "true" : "false"}"
+  namespace         = "${var.namespace}"
+  stage             = "staging"
+  name              = "readonly"
+  attributes        = "kubernetes"
+  role_name         = "${var.kubernetes_readonly_role_name}"
+  user_names        = "${var.staging_account_user_names}"
+  member_account_id = "${data.terraform_remote_state.accounts.staging_account_id}"
+  require_mfa       = "true"
+}
+
 # Provision group access to staging account
 module "organization_access_group_staging" {
   source            = "git::https://github.com/cloudposse/terraform-aws-organization-access-group.git?ref=tags/0.3.0"
@@ -27,6 +53,20 @@ module "organization_access_group_ssm_staging" {
       type        = "String"
       overwrite   = "true"
       description = "IAM admin group name for the 'staging' account"
+    },
+    {
+      name        = "/${var.namespace}/staging/kubernetes_admin_group"
+      value       = "${module.kops_admin_access_group_staging.group_name}"
+      type        = "String"
+      overwrite   = "true"
+      description = "IAM kubernetes admin group name for the 'staging' account"
+    },
+    {
+      name        = "/${var.namespace}/staging/kubernetes_readonly_group"
+      value       = "${module.kops_readonly_access_group_staging.group_name}"
+      type        = "String"
+      overwrite   = "true"
+      description = "IAM kubernetes readonly group name for the 'staging' account"
     },
   ]
 }
